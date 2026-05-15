@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Tambahkan config ini
+export const runtime = 'nodejs'; // Ganti dari edge ke nodejs
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Tambah timeout
+
 const USER_AGENTS = {
   googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
   'googlebot-smartphone': 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/W.X.Y.Z Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
@@ -24,20 +29,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate URL
+    let targetUrl: URL;
+    try {
+      targetUrl = new URL(url);
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'Invalid URL format' },
+        { status: 400 }
+      );
+    }
+
     const userAgent = USER_AGENTS[botType as keyof typeof USER_AGENTS] || USER_AGENTS.googlebot;
 
     // Fetch the page with bot user agent
-    const response = await fetch(url, {
+    const response = await fetch(targetUrl.toString(), {
       headers: {
         'User-Agent': userAgent,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'no-cache',
       },
       redirect: 'follow',
+      signal: AbortSignal.timeout(25000), // 25 second timeout
     });
+
+    if (!response.ok) {
+      return NextResponse.json({
+        success: false,
+        error: `HTTP ${response.status}: ${response.statusText}`,
+        statusCode: response.status,
+      });
+    }
 
     const html = await response.text();
     const headers = Object.fromEntries(response.headers.entries());
@@ -57,10 +80,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Fetch error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
     return NextResponse.json(
       { 
         error: 'Failed to fetch URL', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+        details: errorMessage,
+        hint: 'The target website might be blocking requests or unreachable'
       },
       { status: 500 }
     );
