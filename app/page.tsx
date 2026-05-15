@@ -3,16 +3,25 @@
 import { useState } from 'react';
 
 const BOT_TYPES = [
-  { id: 'googlebot', name: 'Googlebot' },
-  { id: 'googlebot-smartphone', name: 'Googlebot Smartphone' },
-  { id: 'facebookbot', name: 'Facebook Bot' },
-  { id: 'twitterbot', name: 'Twitter Bot' },
-  { id: 'linkedinbot', name: 'LinkedIn Bot' },
-  { id: 'bingbot', name: 'Bing Bot' },
-  { id: 'slackbot', name: 'Slack Bot' },
-  { id: 'whatsapp', name: 'WhatsApp' },
-  { id: 'telegrambot', name: 'Telegram Bot' },
-  { id: 'discordbot', name: 'Discord Bot' },
+  // Normal Users - kategori baru!
+  { id: 'chrome', name: '👤 Chrome (Desktop)', category: 'normal' },
+  { id: 'firefox', name: '👤 Firefox (Desktop)', category: 'normal' },
+  { id: 'safari', name: '👤 Safari (Desktop)', category: 'normal' },
+  { id: 'edge', name: '👤 Edge (Desktop)', category: 'normal' },
+  { id: 'mobile_chrome', name: '📱 Chrome (Mobile)', category: 'normal' },
+  { id: 'mobile_safari', name: '📱 Safari (Mobile)', category: 'normal' },
+  
+  // Bots
+  { id: 'googlebot', name: '🤖 Googlebot', category: 'bot' },
+  { id: 'googlebot-smartphone', name: '🤖 Googlebot Smartphone', category: 'bot' },
+  { id: 'facebookbot', name: '🤖 Facebook Bot', category: 'bot' },
+  { id: 'twitterbot', name: '🤖 Twitter Bot', category: 'bot' },
+  { id: 'linkedinbot', name: '🤖 LinkedIn Bot', category: 'bot' },
+  { id: 'bingbot', name: '🤖 Bing Bot', category: 'bot' },
+  { id: 'slackbot', name: '🤖 Slack Bot', category: 'bot' },
+  { id: 'whatsapp', name: '🤖 WhatsApp', category: 'bot' },
+  { id: 'telegrambot', name: '🤖 Telegram Bot', category: 'bot' },
+  { id: 'discordbot', name: '🤖 Discord Bot', category: 'bot' },
 ];
 
 interface FetchResult {
@@ -25,7 +34,7 @@ interface FetchResult {
 
 export default function Home() {
   const [url, setUrl] = useState('');
-  const [botType, setBotType] = useState('googlebot');
+  const [botType, setBotType] = useState('chrome');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FetchResult | null>(null);
   const [error, setError] = useState('');
@@ -64,15 +73,19 @@ export default function Home() {
     }
   };
 
+  // Kelompokkan bot types
+  const normalUsers = BOT_TYPES.filter(b => b.category === 'normal');
+  const bots = BOT_TYPES.filter(b => b.category === 'bot');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            🤖 Bot Viewer
+            🔍 Bot Viewer
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Lihat bagaimana bot crawler melihat website Anda
+            Lihat bagaimana bot crawler atau user normal melihat website Anda
           </p>
         </div>
 
@@ -95,18 +108,27 @@ export default function Home() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Pilih Bot
+                Pilih User Agent
               </label>
               <select
                 value={botType}
                 onChange={(e) => setBotType(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
-                {BOT_TYPES.map((bot) => (
-                  <option key={bot.id} value={bot.id}>
-                    {bot.name}
-                  </option>
-                ))}
+                <optgroup label="👤 Normal Users (Browser)">
+                  {normalUsers.map((bot) => (
+                    <option key={bot.id} value={bot.id}>
+                      {bot.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="🤖 Bots & Crawlers">
+                  {bots.map((bot) => (
+                    <option key={bot.id} value={bot.id}>
+                      {bot.name}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </div>
 
@@ -121,7 +143,7 @@ export default function Home() {
                   <span>Loading...</span>
                 </>
               ) : (
-                <span>Fetch as Bot</span>
+                <span>Fetch Website</span>
               )}
             </button>
           </div>
