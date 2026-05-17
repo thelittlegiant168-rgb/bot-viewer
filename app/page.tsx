@@ -39,6 +39,7 @@ export default function Home() {
   const [result, setResult] = useState<FetchResult | null>(null);
   const [error, setError] = useState('');
   const [view, setView] = useState<'preview' | 'html' | 'meta'>('preview');
+  const [copied, setCopied] = useState(false);
 
   const handleFetch = async () => {
     if (!url) {
@@ -70,6 +71,19 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    if (!result?.html) return;
+    
+    try {
+      await navigator.clipboard.writeText(result.html);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy to clipboard');
     }
   };
 
@@ -160,37 +174,67 @@ export default function Home() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
             {/* Tabs */}
             <div className="border-b border-gray-200 dark:border-gray-700">
-              <div className="flex space-x-1 p-2">
-                <button
-                  onClick={() => setView('preview')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    view === 'preview'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  Preview
-                </button>
-                <button
-                  onClick={() => setView('html')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    view === 'html'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  HTML Source
-                </button>
-                <button
-                  onClick={() => setView('meta')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    view === 'meta'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  Meta Tags
-                </button>
+              <div className="flex justify-between items-center p-2">
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => setView('preview')}
+                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                      view === 'preview'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => setView('html')}
+                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                      view === 'html'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    HTML Source
+                  </button>
+                  <button
+                    onClick={() => setView('meta')}
+                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                      view === 'meta'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    Meta Tags
+                  </button>
+                </div>
+
+                {/* Copy Button - hanya muncul di tab HTML Source */}
+                {view === 'html' && (
+                  <button
+                    onClick={copyToClipboard}
+                    className={`px-4 py-2 rounded-md font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      copied
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span>Copy HTML</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -226,9 +270,11 @@ export default function Home() {
               )}
 
               {view === 'html' && (
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
-                  <code>{result.html}</code>
-                </pre>
+                <div className="relative">
+                  <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
+                    <code>{result.html}</code>
+                  </pre>
+                </div>
               )}
 
               {view === 'meta' && (
